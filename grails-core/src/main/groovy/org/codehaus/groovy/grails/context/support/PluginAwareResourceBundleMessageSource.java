@@ -207,6 +207,7 @@ public class PluginAwareResourceBundleMessageSource extends ReloadableResourceBu
             public PropertiesHolder call() throws Exception {
                 Properties mergedProps = new Properties();
                 PropertiesHolder mergedHolder = new PropertiesHolder(mergedProps);
+                mergeBinaryPluginProperties(locale, mergedProps);
                 for (String basename : pluginBaseNames) {
                     List<Pair<String, Resource>> filenamesAndResources = calculateAllFilenames(basename, locale);
                     for (int j = filenamesAndResources.size() - 1; j >= 0; j--) {
@@ -254,19 +255,24 @@ public class PluginAwareResourceBundleMessageSource extends ReloadableResourceBu
             public PropertiesHolder call() throws Exception {
                 Properties mergedProps = new Properties();
                 PropertiesHolder mergedHolder = new PropertiesHolder(mergedProps);
-                final GrailsPlugin[] allPlugins = pluginManager.getAllPlugins();
-                for (GrailsPlugin plugin : allPlugins) {
-                    if (plugin instanceof BinaryGrailsPlugin) {
-                        BinaryGrailsPlugin binaryPlugin = (BinaryGrailsPlugin) plugin;
-                        final Properties binaryPluginProperties = binaryPlugin.getProperties(locale);
-                        if (binaryPluginProperties != null) {
-                            mergedProps.putAll(binaryPluginProperties);
-                        }
-                    }
-                }
+                mergeBinaryPluginProperties(locale, mergedProps);
                 return mergedHolder;
             }
+
         });
+    }
+
+    protected void mergeBinaryPluginProperties(final Locale locale, Properties mergedProps) {
+        final GrailsPlugin[] allPlugins = pluginManager.getAllPlugins();
+        for (GrailsPlugin plugin : allPlugins) {
+            if (plugin instanceof BinaryGrailsPlugin) {
+                BinaryGrailsPlugin binaryPlugin = (BinaryGrailsPlugin) plugin;
+                final Properties binaryPluginProperties = binaryPlugin.getProperties(locale);
+                if (binaryPluginProperties != null) {
+                    mergedProps.putAll(binaryPluginProperties);
+                }
+            }
+        }
     }
 
     private String findCodeInBinaryPlugins(String code, Locale locale) {
